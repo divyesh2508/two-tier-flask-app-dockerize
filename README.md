@@ -78,3 +78,7 @@ Step:16 (check in localhost)
 
 
 `http://localhost:5000/`
+
+Step:17 (do using docker-compose file)
+
+`docker compose up -d --build`
