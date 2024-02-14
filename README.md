@@ -1,113 +1,49 @@
- 
-# Flask App with MySQL Docker Setup
+Step:1 (clone git repo.)
+git clone https://github.com/LondheShubham153/two-tier-flask-app.git
 
-This is a simple Flask app that interacts with a MySQL database. The app allows users to submit messages, which are then stored in the database and displayed on the frontend.
+Step:2 (go inside clone repo.)
+cd two-tier-flask-app/
 
-## Prerequisites
+Step:3 (build docker file and create images)
+docker build -t flask-app .
 
-Before you begin, make sure you have the following installed:
+Step:4 (Create network)
+docker network create two-tire-app-nw
 
-- Docker
-- Git (optional, for cloning the repository)
+Step:5 (create mysql container)
+docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=test@123 -e MYSQL_DATABASE=testdb -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin --name mysql --network two-tire-app-nw mysql:latest
 
-## Setup
+Step:6 (check running container of mysql)
+docker ps 
 
-1. Clone this repository (if you haven't already):
+Step:7 (go inside mysql container)
+docker exec -it <container ID> bash
 
-   ```bash
-   git clone https://github.com/your-username/your-repo-name.git
-   ```
+Step:8 (go inside mysql as a root user and enter password)
+mysql -u root -p
+Enter password: test@123
 
-2. Navigate to the project directory:
+Step:9 (give all privileges to admin user)
+mysql> GRANT ALL PRIVILEGES ON default_db.* TO 'admin'@'%';
 
-   ```bash
-   cd your-repo-name
-   ```
+Step:10 (remove all privilege)
+mysql> FLUSH PRIVILEGES;
 
-3. Create a `.env` file in the project directory to store your MySQL environment variables:
 
-   ```bash
-   touch .env
-   ```
+Step:11 (create database)
+mysql> CREATE DATABASE default_db;
 
-4. Open the `.env` file and add your MySQL configuration:
+Step:12 (show database)
+mysql> SHOW DATABASES;
 
-   ```
-   MYSQL_HOST=mysql
-   MYSQL_USER=your_username
-   MYSQL_PASSWORD=your_password
-   MYSQL_DB=your_database
-   ```
+Step:13 (for use databse)
+mysql> use default_db;
 
-## Usage
+Step:14 (create table inside database)
+CREATE TABLE messages (id INT AUTO_INCREMENT PRIMARY KEY,message TEXT);
 
-1. Start the containers using Docker Compose:
+Step:15 (create python django container using mysql credential)
+docker run -d -p 5000:5000 -e MYSQL_HOST=mysql -e MYSQL_DATABASE=testdb -e MYSQL_USER=admin -e MYSQL_PASSWORD=admin --name flask-container4 --network two-tire-app-nw flask-app:latest
 
-   ```bash
-   docker-compose up --build
-   ```
-
-2. Access the Flask app in your web browser:
-
-   - Frontend: http://localhost
-   - Backend: http://localhost:5000
-
-3. Create the `messages` table in your MySQL database:
-
-   - Use a MySQL client or tool (e.g., phpMyAdmin) to execute the following SQL commands:
-   
-     ```sql
-     CREATE TABLE messages (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         message TEXT
-     );
-     ```
-
-4. Interact with the app:
-
-   - Visit http://localhost to see the frontend. You can submit new messages using the form.
-   - Visit http://localhost:5000/insert_sql to insert a message directly into the `messages` table via an SQL query.
-
-## Cleaning Up
-
-To stop and remove the Docker containers, press `Ctrl+C` in the terminal where the containers are running, or use the following command:
-
-```bash
-docker-compose down
-```
-
-## To run this two-tier application using  without docker-compose
-
-- First create a docker image from Dockerfile
-```bash
-docker build -t flaskapp .
-```
-
-- Now, make sure that you have created a network using following command
-```bash
-docker network create twotier
-```
-
-- Attach both the containers in the same network, so that they can communicate with each other
-
-i) MySQL container 
-```bash
-docker run -d --name mysql -v mysql-data:/var/lib/mysql -v ./message.sql:/docker-entrypoint-initdb.d/message.sql --network=twotier -e MYSQL_DATABASE=mydb -e MYSQL_USER=root -e MYSQL_ROOT_PASSWORD="admin" -p 3360:3360 mysql:5.7
-```
-ii) Backend container
-```bash
-docker run -d --name flaskapp -v mysql-data:/var/lib/mysql -v ./message.sql:/docker-entrypoint-initdb.d/message.sql --network=twotier -e MYSQL_HOST=mysql -e MYSQL_USER=root -e MYSQL_PASSWORD=admin -e MYSQL_DB=mydb -p 5000:5000 flaskapp:latest
-```
-
-## Notes
-
-- Make sure to replace placeholders (e.g., `your_username`, `your_password`, `your_database`) with your actual MySQL configuration.
-
-- This is a basic setup for demonstration purposes. In a production environment, you should follow best practices for security and performance.
-
-- Be cautious when executing SQL queries directly. Validate and sanitize user inputs to prevent vulnerabilities like SQL injection.
-
-- If you encounter issues, check Docker logs and error messages for troubleshooting.
-
-```
-
+Step:16 (check in localhost)
+http://localhost:5000/
